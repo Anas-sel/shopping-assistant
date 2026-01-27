@@ -1,3 +1,4 @@
+import pandas as pd
 
 def filter_data(product_group_names=['Shoes']):
     '''
@@ -19,9 +20,8 @@ def preprocess():
 
 
 def sort_by_income(article_ids):
-    def sort_by_income(article_ids):
     """
-    Returns a list of article_ids sorted by highest total income.
+    Returns a list of article_ids sorted by highest total income (descending).
 
     Income is computed as the sum of 'price' per article_id
     from transactions_filtered.csv.
