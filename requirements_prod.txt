@@ -1,10 +1,10 @@
 pytest
 pylint
 ipdb
-jupyterlab
+#jupyterlab
 numpy
 pandas
-matplotlib
-seaborn
+#matplotlib
+#seaborn
 scikit-learn
 # tensorflow==2.16.0 # Take this from Kaggle environment
