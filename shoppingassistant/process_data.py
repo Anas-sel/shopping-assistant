@@ -19,9 +19,20 @@ def preprocess():
 
 
 def sort_by_income(article_ids):
-    '''
-    Docstring for highest_income_products
+    def sort_by_income(article_ids):
+    """
+    Returns a list of article_ids sorted by highest total income.
 
-    Returns a sorted list of the article_ids by highest income
-    '''
-    pass
+    Income is computed as the sum of 'price' per article_id
+    from transactions_filtered.csv.
+    """
+    # Load filtered transactions
+    df_trans = pd.read_csv("../raw_data/transactions_filtered.csv")
+
+    # Sum income per article
+    income_per_article = df_trans.groupby("article_id")["price"].sum()
+
+    # Sort article_ids by income (highest first)
+    sorted_ids = income_per_article.reindex(article_ids).fillna(0).sort_values(ascending=False).index.tolist()
+
+    return sorted_ids
