@@ -107,6 +107,11 @@ def load_images_and_labels(target_column='product_type_name', num_images=None):
 
     df = pd.read_csv('../raw_data/articles_filtered.csv')
 
+    # Remove Sport and Divided category for Gender classification
+    if target_column == 'index_group_name':
+        classes_to_remove = ['Sport',  'Divided']
+        df = df[~df['index_group_name'].isin(classes_to_remove)].reset_index(drop=True)
+
     if num_images is not None:
         df = df.head(num_images)
         print(f"Using {num_images} images")
