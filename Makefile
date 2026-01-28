@@ -1,9 +1,14 @@
+.DEFAULT_GOAL := default
 #======================#
 # Install, clean, test #
 #======================#
 
 install_requirements:
 	@pip install -r requirements.txt
+
+reinstall_package:
+	@pip uninstall -y shoppingassistant || :
+	@pip install -e .
 
 install:
 	@pip install . -U

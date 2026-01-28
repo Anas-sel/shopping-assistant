@@ -1,5 +1,5 @@
 
-def classify_subcategory(image_path, model):
+def classify_subcategory(image_path, model=None):
     """
     Classifies the subcategory of the item in the image located at image_path
     using the provided model according to the column product_type_name from articles.csv
