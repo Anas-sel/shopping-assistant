@@ -120,3 +120,39 @@ def sort_by_revenue(article_ids):
     sorted_ids = revenue_per_article.reindex(article_ids).fillna(0).sort_values(ascending=False).index.tolist()
 
     return sorted_ids
+
+def get_most_popular_articles(article_id, n=10):
+    """
+    Returns a list of the n most popular article_ids based on total revenue
+    and the given article_id, i.e. which are the most revenue-generating articles
+    that were bought together with the given article_id at the same day.
+    """
+    # Load filtered transactions
+    _, df_trans = load_dataframes()
+
+    # Get customer_ids who bought the given article_id
+    customers = df_trans[df_trans["article_id"] == article_id]["customer_id"].unique()
+
+
+    most_sold_with_article = pd.DataFrame(columns=['article_id', 'price'])
+
+    for cust in customers:
+        df_cust = df_trans[df_trans['customer_id']==cust] # Transactions of that customer
+        sell_date = df_cust[df_cust['article_id']==article_id]['t_dat'].values[0] # Date when the article was bought
+        articles_bought_same_day = df_cust[df_cust['t_dat']==sell_date]
+        articles_bought_same_day = articles_bought_same_day[articles_bought_same_day!=article_id]
+        articles_bought_same_day = articles_bought_same_day.dropna()
+        articles_bought_same_day = articles_bought_same_day.sort_values('price')
+        most_sold_with_article = pd.concat([most_sold_with_article, articles_bought_same_day[['article_id', 'price']].head(1)], ignore_index=True)
+    revenue_with_article = most_sold_with_article.groupby('article_id').sum().reset_index()
+    revenue_with_article = revenue_with_article.sort_values('price', ascending=False)
+    return revenue_with_article['article_id'].head(n).tolist()
+
+
+if __name__ == "__main__":
+    # Example usage
+
+    _, df_trans = load_dataframes()
+    article_id = df_trans['article_id'].iloc[0]  # Get an example article_id from the transactions
+    most_popular_articles = get_most_popular_articles(article_id, n=10)
+    print(f"The most popular articles bought with article {article_id} are: {most_popular_articles}")
