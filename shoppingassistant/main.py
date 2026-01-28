@@ -17,7 +17,7 @@ def save_model(model):
 if __name__ == "__main__":
     # Example usage
     from shoppingassistant.clustering import similar_items
-    from shoppingassistant.helper_functions import get_image_path
+    from shoppingassistant.helper_functions import get_image_path, display_results
     from shoppingassistant.process_data import preprocess
 
     articles_df, transactions_df = preprocess()
@@ -26,4 +26,4 @@ if __name__ == "__main__":
     print(f"Image path for article ID {article_id}: {image_path}")
     image = "../raw_data/test_images/test1.jpeg"
     output = similar_items(image, n=5)
-    print(output)
+    display_results(image, output)

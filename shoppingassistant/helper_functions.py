@@ -43,3 +43,47 @@ def get_image_paths(article_ids):
 # def get_category_strs_from_labels():
 
 #     pass
+
+def display_results(query_image_path, results):
+    '''
+    Function to display image results from similar_items function in a grid format
+    '''
+
+    import matplotlib.pyplot as plt
+    from PIL import Image
+    n_results = len(results)
+    fig, axes = plt.subplots(1, n_results + 1, figsize=(4 * (n_results + 1), 5))
+
+    # Display query image
+    query_img = Image.open(query_image_path)
+    axes[0].imshow(query_img)
+    axes[0].set_title('QUERY IMAGE', fontsize=12, fontweight='bold', color='blue')
+    axes[0].axis('off')
+
+    # Display similar images
+    for i, item in enumerate(results):
+        img_path = get_image_path(item['filename'])
+        img = Image.open(img_path)
+
+        axes[i + 1].imshow(img)
+        axes[i + 1].axis('off')
+        axes[i + 1].set_title(f"#{i+1} - Similarity: {item['similarity']:.3f}", fontsize=10)
+        axes[i + 1].set_xlabel(
+            f"{item['prod_name']}\n{item['product_type_name']} | {item['colour_group_name']}\n{item['index_group_name']}",
+            fontsize=9
+        )
+
+    plt.tight_layout()
+    plt.show()
+
+    # Print detailed info
+    print("\n" + "="*80)
+    print("DETAILED RESULTS")
+    print("="*80)
+    for i, item in enumerate(results):
+        print(f"\n#{i+1} | Similarity: {item['similarity']:.4f}")
+        print(f"   Article ID: {item['article_id']}")
+        print(f"   Name: {item['prod_name']}")
+        print(f"   Subcategory: {item['product_type_name']}")
+        print(f"   Color: {item['colour_group_name']}")
+        print(f"   Gender: {item['index_group_name']}")
