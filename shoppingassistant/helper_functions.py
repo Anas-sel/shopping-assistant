@@ -8,6 +8,7 @@ def get_image_path(article_id: str) -> str:
     '''
     image_path = Path("../raw_data/images_filtered/")
     article_str = str(article_id).zfill(10)
+    article_str = article_str.replace('.jpg', '')
     subfolder = article_str[:3]
     image_file = image_path / subfolder / f"{article_str}.jpg"
     if image_file.exists():
