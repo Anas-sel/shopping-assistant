@@ -5,14 +5,8 @@ from PIL import Image
 import open_clip
 import torch
 import chromadb
+from shoppingassistant.params import *
 
-
-# Paths (relative to project root)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IMAGES_DIR = os.path.join(BASE_DIR, 'raw_data', 'images_filtered')
-ARTICLES_CSV = os.path.join(BASE_DIR, 'raw_data', 'articles_filtered.csv')
-CHROMA_DIR = os.path.join(BASE_DIR, 'embeddings', 'chroma')
-COLLECTION_NAME = 'shoe_embeddings'
 
 # Module-level cache (loaded once, reused across calls)
 _cache = {}

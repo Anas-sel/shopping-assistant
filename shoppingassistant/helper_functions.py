@@ -15,15 +15,17 @@ def get_image_path(article_id: str) -> str:
     else:
         raise FileNotFoundError(f"Image for article_id {article_id} not found.")
 
-def get_category_labels_from_strs(categories):
-    '''
-    Docstring for get_category_mappings
-    Returns a dictionary mapping product_type_name to index_group_name
-    '''
-    subcategories =['Boots', 'Sneakers', 'Other shoe', 'Sandals', 'Slippers',
-       'Ballerinas', 'Flat shoe', 'Wedge', 'Pumps', 'Flip flop', 'Bootie',
-       'Heeled sandals', 'Flat shoes', 'Heels', 'Moccasins',
-       'Pre-walkers']
-    subcategories_mapping = { i:subcategories[i] for i in range (len(subcategories))}
+# def get_category_labels_from_strs(categories):
+#     '''
+#     Docstring for get_category_mappings
+#     Returns a dictionary mapping product_type_name to index_group_name
+#     '''
+#     subcategories =['Boots', 'Sneakers', 'Other shoe', 'Sandals', 'Slippers',
+#        'Ballerinas', 'Flat shoe', 'Wedge', 'Pumps', 'Flip flop', 'Bootie',
+#        'Heeled sandals', 'Flat shoes', 'Heels', 'Moccasins',
+#        'Pre-walkers']
+#     subcategories_mapping = { i:subcategories[i] for i in range (len(subcategories))}
 
-def get_category_strs_from_labels():
+# def get_category_strs_from_labels():
+
+#     pass
