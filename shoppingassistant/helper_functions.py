@@ -15,6 +15,20 @@ def get_image_path(article_id: str) -> str:
     else:
         raise FileNotFoundError(f"Image for article_id {article_id} not found.")
 
+def get_image_paths(article_ids):
+    '''
+    Docstring for get_image_paths
+    Given a list of article_ids, return a list of image paths
+    '''
+    paths = []
+    for article_id in article_ids:
+        try:
+            path = get_image_path(article_id)
+            paths.append(path)
+        except FileNotFoundError:
+            paths.append(None)
+    return paths
+
 # def get_category_labels_from_strs(categories):
 #     '''
 #     Docstring for get_category_mappings
