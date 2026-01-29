@@ -1,5 +1,6 @@
 from tensorflow.keras.utils import to_categorical
-from helper_functions import preprocess_single_image, load_images_and_labels
+from shoppingassistant.helper_functions import preprocess_single_image, load_images_and_labels
+import numpy as np
 
 def classify_subcategory(image_path, model=None):
     """

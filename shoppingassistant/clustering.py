@@ -147,7 +147,7 @@ def build_chroma_collection(batch_size=64, force=False):
     return collection
 
 
-def similar_items(image_path, n=5, subcategory=None, gender=None, batch_size=64):
+def get_similar_items(image_path, n=5, subcategory=None, gender=None, batch_size=64):
     """
     Returns a list of n similar items based on the provided image URL and model.
 
