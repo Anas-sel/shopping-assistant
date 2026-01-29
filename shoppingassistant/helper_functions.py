@@ -5,13 +5,14 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from sklearn.model_selection import train_test_split
+from shoppingassistant.params import *
 
 def get_image_path(article_id: str) -> str:
     '''
     Docstring for get_image
     Given an article_id, return the image path
     '''
-    image_path = Path("../raw_data/images_filtered/")
+    image_path = Path(BASE_DIR + "/raw_data/images_filtered/")
     article_str = str(article_id).zfill(10)
     article_str = article_str.replace('.jpg', '')
     subfolder = article_str[:3]
@@ -105,7 +106,7 @@ def load_images_and_labels(target_column='product_type_name', num_images=None):
         categories (list): List of unique category names
     """
 
-    df = pd.read_csv('../raw_data/articles_filtered.csv')
+    df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
 
     if num_images is not None:
         df = df.head(num_images)
@@ -192,3 +193,23 @@ def preprocess_single_image(image_path):
         img_array = np.expand_dims(img_array, axis=0)
 
     return img_array
+
+def get_image(image_path):
+    '''
+    Given an image path, return the same input.
+    Given a url, download the image, save it under raw_data/test_images and return the local path.
+    '''
+    from pathlib import Path
+    import requests
+    from PIL import Image
+    import os
+    from shoppingassistant.params import BASE_DIR
+    if Path(image_path).exists():
+        # Load image from local path
+        return image_path
+    else:
+        # Load image from URL
+        image_url = requests.get(image_path, stream=True).content
+        with open(os.path.join(BASE_DIR, 'raw_data', 'test_images', 'temp.jpg'), 'wb') as f:
+            f.write(image_url)
+        return str(BASE_DIR / 'raw_data' / 'test_images' / 'temp.jpg')
