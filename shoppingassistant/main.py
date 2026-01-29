@@ -39,6 +39,7 @@ def suggest_articles(image_path, model=None, top_k=5):
         list: A list of image paths for similar images.
     """
     image_path = get_image(image_path)
+    
     if model is None:
         model_subcat_class = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
         subcategory_pred = classify_subcategory(image_path, model_subcat_class)
@@ -56,6 +57,8 @@ def suggest_articles(image_path, model=None, top_k=5):
     for item in similar_articles:
         similar_images.append(item['image_path']) # or article_id
 
+    # Return image object instead of path using Image
+    # put images in docker image or Drive if needed
     return similar_images
 
 
