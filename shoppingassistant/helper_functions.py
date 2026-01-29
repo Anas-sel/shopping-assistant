@@ -217,4 +217,4 @@ def get_image(image_path):
         image_url = requests.get(image_path, stream=True).content
         with open(os.path.join(BASE_DIR, 'raw_data', 'test_images', 'temp.jpg'), 'wb') as f:
             f.write(image_url)
-        return str(BASE_DIR / 'raw_data' / 'test_images' / 'temp.jpg')
+        return os.path.join(BASE_DIR, 'raw_data', 'test_images', 'temp.jpg')
