@@ -4,7 +4,7 @@ import requests
 from pathlib import Path
 import os
 from shoppingassistant.params import *
-from shoppingassistant.classification import classify_subcategory
+from shoppingassistant.classification import classify_subcategory, classify_gender
 from shoppingassistant.clustering import get_similar_items
 from tensorflow.keras.models import load_model
 from shoppingassistant.helper_functions import get_image
@@ -39,16 +39,20 @@ def suggest_articles(image_path, model=None, top_k=5):
         list: A list of image paths for similar images.
     """
     image_path = get_image(image_path)
-    
+
     if model is None:
         model_subcat_class = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
         subcategory_pred = classify_subcategory(image_path, model_subcat_class)
+
+        model_gender_class = load_model(os.path.join(BASE_DIR, 'models', 'gender_classifier.keras'))
+        gender_pred = classify_gender(image_path, model_gender_class)
     else:
         subcategory_pred = classify_subcategory(image_path, model)
-    print(f"Predicted category: {subcategory_pred}")
+        gender_pred = classify_subcategory(image_path, model)
 
-    # Predict gender
-    gender_pred = "Menswear"  # Placeholder for gender prediction
+    print(f"Predicted category: {subcategory_pred}")
+    print(f"Predicted gender: {gender_pred}")
+
 
     # Further processing to suggest similar items based on category_pred
     similar_articles = get_similar_items(image_path, subcategory=subcategory_pred, gender=gender_pred)
@@ -75,4 +79,5 @@ if __name__ == "__main__":
     # output = get_similar_items(image_path, n=5, subcategory='Sandals', gender='Menswear')
     # display_results(image, output)
     similar_images = suggest_articles(image, top_k=5)
+    display(Image(image_path))
     print("Similar images:", similar_images)
