@@ -3,6 +3,8 @@ from shoppingassistant.main import suggest_articles
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import base64
+from pathlib import Path
 
 app = FastAPI()
 
@@ -24,10 +26,9 @@ def root():
 # Endpoint for http://localhost:8000/predict?image_path=https://assets.adidas.com/images/w_600,f_auto,q_auto/7a42ee6702ea43b49b8c3ada469e818f_9366/Ultrarun_5_Running_Shoes_Black_IE8794_HM1.jpg&top_k=5
 @app.get("/predict")
 def get_predict(image_path: str, top_k: int = 5):
-    return {
-        'suggestion': suggest_articles(image_path, top_k=top_k),
-        'inputs': {
-            'image_url': image_path,
-            'number of suggestions': top_k
-        }
-    }
+    sugg_paths = suggest_articles(image_path, top_k=top_k)
+
+    return [
+        {'name': Path(p).name, 'data': base64.b64encode(Path(p).read_bytes()).decode()}
+        for p in sugg_paths
+    ]
