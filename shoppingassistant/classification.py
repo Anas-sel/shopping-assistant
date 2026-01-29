@@ -35,7 +35,8 @@ def classify_gender(image_path, model=None):
 
     '''
 
-    _, _, categories = load_images_and_labels(target_column='index_group_name', num_images=1)
+    #_, _, categories = load_images_and_labels(target_column='index_group_name', num_images=1)
+    categories = ['Baby/Children', 'Ladieswear', 'Menswear']
     img_array = preprocess_single_image(image_path)
 
     model = load_model('../models/gender_classifier.keras')
