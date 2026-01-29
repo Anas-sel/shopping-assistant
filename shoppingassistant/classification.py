@@ -1,11 +1,11 @@
+from tensorflow.keras.utils import to_categorical
+from shoppingassistant.helper_functions import preprocess_single_image, load_images_and_labels
+import numpy as np
 import requests
 import numpy as np
 from PIL import Image
 from io import BytesIO
-from helper_functions import preprocess_single_image, load_images_and_labels
 from tensorflow.keras.models import load_model
-from shoppingassistant.helper_functions import preprocess_single_image
-
 
 
 def classify_subcategory(image_path, model=None):

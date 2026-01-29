@@ -6,6 +6,8 @@ import os
 import shutil
 from pathlib import Path
 
+from shoppingassistant.params import BASE_DIR
+
 def filter_data(product_group_names=['Shoes']):
     '''
     Filters the dataset to only keep the rows corresponding to the specified
@@ -14,7 +16,7 @@ def filter_data(product_group_names=['Shoes']):
     Removes rows that do not have corresponding images.
     Saves the filtered data to articles_filtered.csv and transactions_filtered.csv.
     '''
-    path_to_data = Path("../raw_data/")
+    path_to_data = Path(BASE_DIR + "/raw_data/")
     if not (path_to_data / "articles_filtered.csv").exists() or not (path_to_data / "transactions_filtered.csv").exists():
         # Loading Data
         articles_df = pd.read_csv(path_to_data / "articles.csv")
@@ -28,8 +30,8 @@ def filter_data(product_group_names=['Shoes']):
 
         # Creating images_filtered directory that will contain only the images of the filtered articles
         needed_article_ids = articles_df_filtered['article_id'].unique()
-        source_images_path = Path('../raw_data/images_256_256')
-        dest_images_path = Path('../raw_data/images_filtered')
+        source_images_path = Path(BASE_DIR + '/raw_data/images_256_256')
+        dest_images_path = Path(BASE_DIR + '/raw_data/images_filtered')
         copied_count = 0
         missing_count = 0
 
@@ -57,8 +59,8 @@ def filter_data(product_group_names=['Shoes']):
         print(f"Copied {copied_count} images")
         print(f"Missing images: {missing_count}")
         print(f"Total article IDs: {needed_article_ids.shape}")
-        articles_df_filtered.to_csv("../raw_data/articles_filtered.csv")
-        df_trans_filtered.to_csv("../raw_data/transactions_filtered.csv")
+        articles_df_filtered.to_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
+        df_trans_filtered.to_csv(BASE_DIR + "/raw_data/transactions_filtered.csv")
         print(f"✅ Filtered data saved to articles_filtered.csv and transactions_filtered.csv")
     else:
         print("✅ Filtered data already exists.")
@@ -71,7 +73,7 @@ def load_dataframes(keep_colors=False):
     Docstring for preprocess
     Preprocess the data
     '''
-    path_to_data = Path("../raw_data/")
+    path_to_data = Path(BASE_DIR + "/raw_data/")
     filter_data()
 
     transactions_df = pd.read_csv(path_to_data / "transactions_filtered.csv")
@@ -111,7 +113,7 @@ def sort_by_revenue(article_ids):
     from transactions_filtered.csv.
     """
     # Load filtered transactions
-    df_trans = pd.read_csv("../raw_data/transactions_filtered.csv")
+    df_trans = pd.read_csv(BASE_DIR + "/raw_data/transactions_filtered.csv")
 
     # Sum income per article
     revenue_per_article = df_trans.groupby("article_id")["price"].sum()

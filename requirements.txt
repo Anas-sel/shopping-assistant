@@ -16,3 +16,4 @@ Pillow           # image loading (PIL)
 tqdm             # progress bars for batch processing
 # tensorflow==2.16.0 # Take this from Kaggle environment
 tensorflow==2.19.0
+requests         # HTTP requests for API calls
