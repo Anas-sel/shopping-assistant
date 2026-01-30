@@ -1,5 +1,6 @@
 from tensorflow.keras.utils import to_categorical
 from shoppingassistant.helper_functions import preprocess_single_image, load_images_and_labels
+from shoppingassistant.params import *
 import numpy as np
 import requests
 import numpy as np
