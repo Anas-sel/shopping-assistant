@@ -7,3 +7,6 @@ Please run meerim_test_classifier and check last section how to load the model
 ## Clustering model
 The jupyter notebook 'notebooks/kyrylo_test2' needs to be run before using the function
 in clustering.py so that some files get created.
+
+## Service url:
+https://api-520917056692.europe-west1.run.app
