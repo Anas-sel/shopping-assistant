@@ -25,7 +25,7 @@ def save_model(model):
     pass
 
 
-def suggest_articles(image_path, model=None, top_k=5):
+def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     """
     Suggest similar items based on the input image using the provided model.
 
@@ -40,22 +40,21 @@ def suggest_articles(image_path, model=None, top_k=5):
     """
     image_path = get_image(image_path)
 
-    if model is None:
+    if subcategory is None:
         model_subcat_class = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
-        subcategory_pred = classify_subcategory(image_path, model_subcat_class)
+        subcategory = classify_subcategory(image_path, model_subcat_class)
 
+
+    if gender is None:
         model_gender_class = load_model(os.path.join(BASE_DIR, 'models', 'gender_classifier.keras'))
-        gender_pred = classify_gender(image_path, model_gender_class)
-    else:
-        subcategory_pred = classify_subcategory(image_path, model)
-        gender_pred = classify_subcategory(image_path, model)
+        gender = classify_gender(image_path, model_gender_class)
 
-    print(f"Predicted category: {subcategory_pred}")
-    print(f"Predicted gender: {gender_pred}")
+    print(f"Predicted category: {subcategory}")
+    print(f"Predicted gender: {gender}")
 
 
     # Further processing to suggest similar items based on category_pred
-    similar_articles = get_similar_items(image_path, subcategory=subcategory_pred, gender=gender_pred)
+    similar_articles = get_similar_items(image_path, subcategory=subcategory, gender=gender, n=top_k)
 
     similar_images = []
     for item in similar_articles:
