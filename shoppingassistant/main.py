@@ -75,9 +75,9 @@ if __name__ == "__main__":
     article_id = articles_df.iloc[10]['article_id']
     image_path = get_image_path(article_id)
     print(f"Image path for article ID {article_id}: {image_path}")
-    image = BASE_DIR + "/raw_data/test_images/test1.jpg"
+    image = BASE_DIR + "/raw_data/test_images/temp.jpg"
     # output = get_similar_items(image_path, n=5, subcategory='Sandals', gender='Menswear')
     # display_results(image, output)
     similar_images = suggest_articles(image, top_k=5)
-    display(Image(image_path))
+    #display(Image(image_path))
     print("Similar images:", similar_images)

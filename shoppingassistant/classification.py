@@ -1,5 +1,6 @@
 from tensorflow.keras.utils import to_categorical
 from shoppingassistant.helper_functions import preprocess_single_image, load_images_and_labels
+from shoppingassistant.params import *
 import numpy as np
 import requests
 import numpy as np
@@ -39,7 +40,7 @@ def classify_gender(image_path, model=None):
     categories = ['Baby/Children', 'Ladieswear', 'Menswear']
     img_array = preprocess_single_image(image_path)
 
-    model = load_model('../models/gender_classifier.keras')
+    model = load_model(BASE_DIR+'/models/gender_classifier.keras')
     predictions = model.predict(img_array, verbose=0)
     predicted_idx = np.argmax(predictions[0])
     predicted_gender = categories[predicted_idx]
