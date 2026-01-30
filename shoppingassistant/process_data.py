@@ -6,6 +6,8 @@ import os
 import shutil
 from pathlib import Path
 
+from shoppingassistant.params import BASE_DIR
+
 def filter_data(product_group_names=['Shoes']):
     '''
     Filters the dataset to only keep the rows corresponding to the specified
@@ -14,7 +16,7 @@ def filter_data(product_group_names=['Shoes']):
     Removes rows that do not have corresponding images.
     Saves the filtered data to articles_filtered.csv and transactions_filtered.csv.
     '''
-    path_to_data = Path("../raw_data/")
+    path_to_data = Path(BASE_DIR + "/raw_data/")
     if not (path_to_data / "articles_filtered.csv").exists() or not (path_to_data / "transactions_filtered.csv").exists():
         # Loading Data
         articles_df = pd.read_csv(path_to_data / "articles.csv")
@@ -28,8 +30,8 @@ def filter_data(product_group_names=['Shoes']):
 
         # Creating images_filtered directory that will contain only the images of the filtered articles
         needed_article_ids = articles_df_filtered['article_id'].unique()
-        source_images_path = Path('../raw_data/images_256_256')
-        dest_images_path = Path('../raw_data/images_filtered')
+        source_images_path = Path(BASE_DIR + '/raw_data/images_256_256')
+        dest_images_path = Path(BASE_DIR + '/raw_data/images_filtered')
         copied_count = 0
         missing_count = 0
 
@@ -57,8 +59,8 @@ def filter_data(product_group_names=['Shoes']):
         print(f"Copied {copied_count} images")
         print(f"Missing images: {missing_count}")
         print(f"Total article IDs: {needed_article_ids.shape}")
-        articles_df_filtered.to_csv("../raw_data/articles_filtered.csv")
-        df_trans_filtered.to_csv("../raw_data/transactions_filtered.csv")
+        articles_df_filtered.to_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
+        df_trans_filtered.to_csv(BASE_DIR + "/raw_data/transactions_filtered.csv")
         print(f"✅ Filtered data saved to articles_filtered.csv and transactions_filtered.csv")
     else:
         print("✅ Filtered data already exists.")
@@ -71,7 +73,7 @@ def load_dataframes(keep_colors=False):
     Docstring for preprocess
     Preprocess the data
     '''
-    path_to_data = Path("../raw_data/")
+    path_to_data = Path(BASE_DIR + "/raw_data/")
     filter_data()
 
     transactions_df = pd.read_csv(path_to_data / "transactions_filtered.csv")
@@ -111,7 +113,7 @@ def sort_by_revenue(article_ids):
     from transactions_filtered.csv.
     """
     # Load filtered transactions
-    df_trans = pd.read_csv("../raw_data/transactions_filtered.csv")
+    df_trans = pd.read_csv(BASE_DIR + "/raw_data/transactions_filtered.csv")
 
     # Sum income per article
     revenue_per_article = df_trans.groupby("article_id")["price"].sum()
@@ -120,3 +122,39 @@ def sort_by_revenue(article_ids):
     sorted_ids = revenue_per_article.reindex(article_ids).fillna(0).sort_values(ascending=False).index.tolist()
 
     return sorted_ids
+
+def get_most_popular_articles(article_id, n=10):
+    """
+    Returns a list of the n most popular article_ids based on total revenue
+    and the given article_id, i.e. which are the most revenue-generating articles
+    that were bought together with the given article_id at the same day.
+    """
+    # Load filtered transactions
+    _, df_trans = load_dataframes()
+
+    # Get customer_ids who bought the given article_id
+    customers = df_trans[df_trans["article_id"] == article_id]["customer_id"].unique()
+
+
+    most_sold_with_article = pd.DataFrame(columns=['article_id', 'price'])
+
+    for cust in customers:
+        df_cust = df_trans[df_trans['customer_id']==cust] # Transactions of that customer
+        sell_date = df_cust[df_cust['article_id']==article_id]['t_dat'].values[0] # Date when the article was bought
+        articles_bought_same_day = df_cust[df_cust['t_dat']==sell_date]
+        articles_bought_same_day = articles_bought_same_day[articles_bought_same_day!=article_id]
+        articles_bought_same_day = articles_bought_same_day.dropna()
+        articles_bought_same_day = articles_bought_same_day.sort_values('price')
+        most_sold_with_article = pd.concat([most_sold_with_article, articles_bought_same_day[['article_id', 'price']].head(1)], ignore_index=True)
+    revenue_with_article = most_sold_with_article.groupby('article_id').sum().reset_index()
+    revenue_with_article = revenue_with_article.sort_values('price', ascending=False)
+    return revenue_with_article['article_id'].head(n).tolist()
+
+
+if __name__ == "__main__":
+    # Example usage
+
+    _, df_trans = load_dataframes()
+    article_id = df_trans['article_id'].iloc[0]  # Get an example article_id from the transactions
+    most_popular_articles = get_most_popular_articles(article_id, n=10)
+    print(f"The most popular articles bought with article {article_id} are: {most_popular_articles}")

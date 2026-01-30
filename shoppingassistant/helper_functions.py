@@ -5,14 +5,16 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from sklearn.model_selection import train_test_split
+from shoppingassistant.params import *
 
 def get_image_path(article_id: str) -> str:
     '''
     Docstring for get_image
     Given an article_id, return the image path
     '''
-    image_path = Path("../raw_data/images_filtered/")
+    image_path = Path(BASE_DIR + "/raw_data/images_filtered/")
     article_str = str(article_id).zfill(10)
+    article_str = article_str.replace('.jpg', '')
     subfolder = article_str[:3]
     image_file = image_path / subfolder / f"{article_str}.jpg"
     if image_file.exists():
@@ -49,6 +51,49 @@ def get_image_paths(article_ids):
 
 #     pass
 
+def display_results(query_image_path, results):
+    '''
+    Function to display image results from similar_items function in a grid format
+    '''
+
+    import matplotlib.pyplot as plt
+    from PIL import Image
+    n_results = len(results)
+    fig, axes = plt.subplots(1, n_results + 1, figsize=(4 * (n_results + 1), 5))
+
+    # Display query image
+    query_img = Image.open(query_image_path)
+    axes[0].imshow(query_img)
+    axes[0].set_title('QUERY IMAGE', fontsize=12, fontweight='bold', color='blue')
+    axes[0].axis('off')
+
+    # Display similar images
+    for i, item in enumerate(results):
+        img_path = get_image_path(item['filename'])
+        img = Image.open(img_path)
+
+        axes[i + 1].imshow(img)
+        axes[i + 1].axis('off')
+        axes[i + 1].set_title(f"#{i+1} - Similarity: {item['similarity']:.3f}", fontsize=10)
+        axes[i + 1].set_xlabel(
+            f"{item['prod_name']}\n{item['product_type_name']} | {item['colour_group_name']}\n{item['index_group_name']}",
+            fontsize=9
+        )
+
+    plt.tight_layout()
+    plt.show()
+
+    # Print detailed info
+    print("\n" + "="*80)
+    print("DETAILED RESULTS")
+    print("="*80)
+    for i, item in enumerate(results):
+        print(f"\n#{i+1} | Similarity: {item['similarity']:.4f}")
+        print(f"   Article ID: {item['article_id']}")
+        print(f"   Name: {item['prod_name']}")
+        print(f"   Subcategory: {item['product_type_name']}")
+        print(f"   Color: {item['colour_group_name']}")
+        print(f"   Gender: {item['index_group_name']}")
 
 def load_images_and_labels(target_column='product_type_name', num_images=None):
     """
@@ -61,7 +106,12 @@ def load_images_and_labels(target_column='product_type_name', num_images=None):
         categories (list): List of unique category names
     """
 
-    df = pd.read_csv('../raw_data/articles_filtered.csv')
+    df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
+
+    # Remove Sport and Divided category for Gender classification
+    if target_column == 'index_group_name':
+        classes_to_remove = ['Sport',  'Divided']
+        df = df[~df['index_group_name'].isin(classes_to_remove)].reset_index(drop=True)
 
     if num_images is not None:
         df = df.head(num_images)
@@ -148,3 +198,23 @@ def preprocess_single_image(image_path):
         img_array = np.expand_dims(img_array, axis=0)
 
     return img_array
+
+def get_image(image_path):
+    '''
+    Given an image path, return the same input.
+    Given a url, download the image, save it under raw_data/test_images and return the local path.
+    '''
+    from pathlib import Path
+    import requests
+    from PIL import Image
+    import os
+    from shoppingassistant.params import BASE_DIR
+    if Path(image_path).exists():
+        # Load image from local path
+        return image_path
+    else:
+        # Load image from URL
+        image_url = requests.get(image_path, stream=True).content
+        with open(os.path.join(BASE_DIR, 'raw_data', 'test_images', 'temp.jpg'), 'wb') as f:
+            f.write(image_url)
+        return os.path.join(BASE_DIR, 'raw_data', 'test_images', 'temp.jpg')

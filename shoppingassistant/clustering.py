@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from PIL import Image
+from pathlib import Path
 
 import open_clip
 import torch
@@ -27,11 +28,16 @@ def _load_clip_model():
 def _get_chroma_collection():
     """Get or create ChromaDB collection (cached)."""
     if 'collection' not in _cache:
-        client = chromadb.PersistentClient(path=CHROMA_DIR)
-        _cache['collection'] = client.get_or_create_collection(
-            name=COLLECTION_NAME,
-            metadata={'hnsw:space': 'cosine'}
-        )
+        # Check if embeddings exist on disk
+        if not os.path.exists(CHROMA_DIR) or len(os.listdir(CHROMA_DIR)) == 0:
+            client = chromadb.PersistentClient(path=CHROMA_DIR)
+            _cache['collection'] = client.get_or_create_collection(
+                name=COLLECTION_NAME,
+                metadata={'hnsw:space': 'cosine'}
+            )
+        else:
+            client = chromadb.PersistentClient(path=CHROMA_DIR)
+            _cache['collection'] = client.get_collection(name=COLLECTION_NAME)
     return _cache['collection']
 
 
@@ -63,88 +69,92 @@ def _get_image_path(filename):
     return os.path.join(IMAGES_DIR, subfolder, filename)
 
 
-def build_chroma_collection(batch_size=64):
+def build_chroma_collection(batch_size=64, force=False):
     """Populate ChromaDB with CLIP embeddings for all filtered images.
 
     Reads articles_filtered.csv for metadata and processes all images
     in images_filtered/. Call this once from a notebook to build the DB.
-    """
-    df = _load_articles()
+        """
     collection = _get_chroma_collection()
+    if not force and collection.count() > 0:
+        print(f"ChromaDB collection already populated by {collection.count()}. Skipping build.")
 
-    # Build lookup dict for metadata
-    meta_lookup = {}
-    for _, row in df.iterrows():
-        meta_lookup[row['article_id']] = {
-            'article_id': str(row['article_id']),
-            'prod_name': str(row.get('prod_name', '')),
-            'product_type_name': str(row.get('product_type_name', '')),
-            'colour_group_name': str(row.get('colour_group_name', '')),
-            'index_group_name': str(row.get('index_group_name', '')),
-        }
+    else:
+        df = _load_articles()
+        # Build lookup dict for metadata
+        meta_lookup = {}
+        for _, row in df.iterrows():
+            meta_lookup[row['article_id']] = {
+                'article_id': str(row['article_id']),
+                'prod_name': str(row.get('prod_name', '')),
+                'product_type_name': str(row.get('product_type_name', '')),
+                'colour_group_name': str(row.get('colour_group_name', '')),
+                'index_group_name': str(row.get('index_group_name', '')),
+            }
 
-    # Collect all image paths
-    all_files = []
-    for subfolder in sorted(os.listdir(IMAGES_DIR)):
-        subfolder_path = os.path.join(IMAGES_DIR, subfolder)
-        if not os.path.isdir(subfolder_path):
-            continue
-        for fname in sorted(os.listdir(subfolder_path)):
-            if fname.endswith('.jpg'):
-                all_files.append(fname)
+        # Collect all image paths
+        all_files = []
+        for subfolder in sorted(os.listdir(IMAGES_DIR)):
+            subfolder_path = os.path.join(IMAGES_DIR, subfolder)
+            if not os.path.isdir(subfolder_path):
+                continue
+            for fname in sorted(os.listdir(subfolder_path)):
+                if fname.endswith('.jpg'):
+                    all_files.append(fname)
 
-    print(f"Found {len(all_files)} images to process")
+        print(f"Found {len(all_files)} images to process")
 
-    # Process in batches
-    model, preprocess = _load_clip_model()
+        # Process in batches
+        model, preprocess = _load_clip_model()
 
-    for i in range(0, len(all_files), batch_size):
-        batch_files = all_files[i:i + batch_size]
+        for i in range(0, len(all_files), batch_size):
+            batch_files = all_files[i:i + batch_size]
 
-        ids = []
-        embeddings = []
-        metadatas = []
+            ids = []
+            embeddings = []
+            metadatas = []
 
-        for fname in batch_files:
-            image_path = _get_image_path(fname)
-            try:
-                img = Image.open(image_path).convert('RGB')
-                img_tensor = preprocess(img).unsqueeze(0)
+            for fname in batch_files:
+                image_path = _get_image_path(fname)
+                try:
+                    img = Image.open(image_path).convert('RGB')
+                    img_tensor = preprocess(img).unsqueeze(0)
 
-                with torch.no_grad():
-                    emb = model.encode_image(img_tensor)
-                emb = emb.squeeze().numpy().astype(float)
+                    with torch.no_grad():
+                        emb = model.encode_image(img_tensor)
+                    emb = emb.squeeze().numpy().astype(float)
 
-                article_id = _filename_to_article_id(fname)
-                meta = meta_lookup.get(article_id, {
-                    'article_id': str(article_id),
-                    'prod_name': '',
-                    'product_type_name': '',
-                    'colour_group_name': '',
-                    'index_group_name': '',
-                })
+                    article_id = _filename_to_article_id(fname)
+                    meta = meta_lookup.get(article_id, {
+                        'article_id': str(article_id),
+                        'prod_name': '',
+                        'product_type_name': '',
+                        'colour_group_name': '',
+                        'index_group_name': '',
+                    })
 
-                ids.append(fname)
-                embeddings.append(emb.tolist())
-                metadatas.append(meta)
-            except Exception as e:
-                print(f"  Skipping {fname}: {e}")
+                    ids.append(fname)
+                    embeddings.append(emb.tolist())
+                    metadatas.append(meta)
+                except Exception as e:
+                    print(f"  Skipping {fname}: {e}")
 
-        if ids:
-            collection.upsert(ids=ids, embeddings=embeddings, metadatas=metadatas)
-            print(f"  Processed {min(i + batch_size, len(all_files))}/{len(all_files)}")
+            if ids:
+                collection.upsert(ids=ids, embeddings=embeddings, metadatas=metadatas)
+                print(f"  Processed {min(i + batch_size, len(all_files))}/{len(all_files)}")
 
-    print(f"Done! Collection has {collection.count()} items.")
+        print(f"Done! Collection has {collection.count()} items.")
+    return collection
 
 
-def similar_items(image_path, n=5, subcategory=None, gender=None):
+def get_similar_items(image_path, n=5, subcategory=None, gender=None, batch_size=64):
     """
     Returns a list of n similar items based on the provided image URL and model.
 
     First iteration: Only consider the same subcategory and gender given from
     classification models.
     """
-    collection = _get_chroma_collection()
+    collection = build_chroma_collection(batch_size=batch_size)
 
     # Extract CLIP embedding from query image
     query_embedding = extract_embedding(image_path)
