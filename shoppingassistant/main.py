@@ -8,7 +8,7 @@ from shoppingassistant.classification import classify_subcategory, classify_gend
 from shoppingassistant.clustering import get_similar_items
 from shoppingassistant.suggestions import suggest_from_sales
 from tensorflow.keras.models import load_model
-from shoppingassistant.helper_functions import get_image, display_suggestions, get_prod_name
+from shoppingassistant.helper_functions import get_image, display_suggestions, get_prod_name, get_price
 import base64
 
 
@@ -79,6 +79,7 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
          'description': f"Similar item #{i+1}" if i<len(similar_images) else f"Sales based suggestion #{i+1 - len(similar_images)}",
          'subcategory': f"Subcategory: {subcategory}",
          'gender': f"Gender: {gender}",
+         'price': get_price(p)
          'path': p
          }
         for i, p in enumerate(suggestions)

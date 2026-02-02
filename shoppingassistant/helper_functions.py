@@ -247,3 +247,6 @@ def get_prod_name(image_path):
         return prod_name[0]
     else:
         return "Unknown Product"
+
+def get_price(article_path):
+    return 0.23
