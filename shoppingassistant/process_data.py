@@ -148,7 +148,7 @@ def get_most_popular_articles(article_id, n=10):
         most_sold_with_article = pd.concat([most_sold_with_article, articles_bought_same_day[['article_id', 'price']].head(1)], ignore_index=True)
     revenue_with_article = most_sold_with_article.groupby('article_id').sum().reset_index()
     revenue_with_article = revenue_with_article.sort_values('price', ascending=False)
-    return revenue_with_article['article_id'].head(n).tolist()
+    return revenue_with_article['article_id'].head(n).map(int).tolist()
 
 
 if __name__ == "__main__":

@@ -36,20 +36,12 @@ def get_image_paths(article_ids):
             paths.append(None)
     return paths
 
-# def get_category_labels_from_strs(categories):
-#     '''
-#     Docstring for get_category_mappings
-#     Returns a dictionary mapping product_type_name to index_group_name
-#     '''
-#     subcategories =['Boots', 'Sneakers', 'Other shoe', 'Sandals', 'Slippers',
-#        'Ballerinas', 'Flat shoe', 'Wedge', 'Pumps', 'Flip flop', 'Bootie',
-#        'Heeled sandals', 'Flat shoes', 'Heels', 'Moccasins',
-#        'Pre-walkers']
-#     subcategories_mapping = { i:subcategories[i] for i in range (len(subcategories))}
-
-# def get_category_strs_from_labels():
-
-#     pass
+def get_article_id_from_path(image_path: str) -> int:
+    '''
+    Given an image path, return the article_id
+    '''
+    filename = os.path.basename(image_path)
+    return int(filename.split('.')[0][1:])
 
 def display_results(query_image_path, results):
     '''
@@ -218,3 +210,40 @@ def get_image(image_path):
         with open(os.path.join(BASE_DIR, 'raw_data', 'test_images', 'temp.jpg'), 'wb') as f:
             f.write(image_url)
         return os.path.join(BASE_DIR, 'raw_data', 'test_images', 'temp.jpg')
+
+def display_suggestions(suggestions):
+    '''
+    Function to display image suggestions from suggest_articles function in a grid format
+    '''
+
+    import matplotlib.pyplot as plt
+
+    from PIL import Image as PILImage
+
+    n_results = len(suggestions)
+    fig, axes = plt.subplots(1, n_results, figsize=(4 * n_results, 5))
+
+    # Display suggested images
+    for i, suggestion in enumerate(suggestions):
+        img = PILImage.open(suggestion['path'])
+
+        axes[i].imshow(img)
+        axes[i].axis('off')
+        axes[i].set_title(suggestion['description'], fontsize=12, fontweight='bold', color='green')
+
+    plt.tight_layout()
+    plt.show()
+
+
+def get_prod_name(image_path):
+    '''
+    Given an image path, return the product name from articles_filtered.csv
+    '''
+    import pandas as pd
+    df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
+    article_id = get_article_id_from_path(image_path)
+    prod_name = df[df['article_id'] == article_id]['prod_name'].values
+    if len(prod_name) > 0:
+        return prod_name[0]
+    else:
+        return "Unknown Product"
