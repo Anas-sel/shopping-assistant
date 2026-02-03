@@ -79,7 +79,7 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
          'description': f"Similar item #{i+1}" if i<len(similar_images) else f"Sales based suggestion #{i+1 - len(similar_images)}",
          'subcategory': f"Subcategory: {subcategory}",
          'gender': f"Gender: {gender}",
-         'price': get_price(p)
+         'price': get_price(p),
          'path': p
          }
         for i, p in enumerate(suggestions)
