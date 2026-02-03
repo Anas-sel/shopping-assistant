@@ -84,7 +84,7 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     print(f"⌛ The runtime of the Subcategory classification model is {sub_classifier_run_time} ⌛")
     print(f"⌛ The runtime of the Gender classification model is {gen_classifier_run_time} ⌛")
     print(f"⌛ The runtime of the similarity search model is {clustering_run_time} ⌛")
-    print(f" --------------⏰⏰⏰⏰⏰⏰⏰⏰⏰ -------------- ")
+    print(f" -------------- ⏰⏰⏰⏰⏰⏰⏰⏰⏰ -------------- ")
     return [
         {'name': get_prod_name(p),
          'data': base64.b64encode(Path(p).read_bytes()).decode(),
@@ -104,11 +104,11 @@ if __name__ == "__main__":
     from shoppingassistant.process_data import load_dataframes
 
     image = BASE_DIR + "/raw_data/test_images/temp.jpg"
-    # output = get_similar_items(image_path, n=5, subcategory='Sandals', gender='Menswear')
-    # display_results(image, output)
+
+
+    # Some urls for testing the function
     url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcS9e8LgfdduH__eVABV2kFceX-nAnhQXsFuwKMClMNwS11B6aKB6QSsKWEQfl3Q3HjH3z3YGVbRN7j9ellAW4qiokIcxLwdtRhoKO0YFffMbop9GmxTRFMEbAHa3ghUoMU79CsfavVjLA&usqp=CAc'
-    url = 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRbVSH29symEB856MgsktvF2Awj8tKjB6JU2rqdIki9cM2H8dt_5ygqhRa_p2YDf9Awv9K6vWs69iSkY72z0kjKvY8HoKKekfzgtAk_B0-h_8QW_u3Q6vfKzxZ9ju01hFHwxzvzw7HsVg&usqp=CAc'
-    url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcR9gf6qxciZPFtmy7il5ZnaMenaohfEmfK2FQ_ieT-QbzJrw0X3AA1GqoSHU914_Rt_CU7xASXA-Iohe3U_tr4NfC8N-UliXiupYrukZHiQF-Vbwu8njW9Q&usqp=CAc'
+    # url = 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRbVSH29symEB856MgsktvF2Awj8tKjB6JU2rqdIki9cM2H8dt_5ygqhRa_p2YDf9Awv9K6vWs69iSkY72z0kjKvY8HoKKekfzgtAk_B0-h_8QW_u3Q6vfKzxZ9ju01hFHwxzvzw7HsVg&usqp=CAc'
+    # url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcR9gf6qxciZPFtmy7il5ZnaMenaohfEmfK2FQ_ieT-QbzJrw0X3AA1GqoSHU914_Rt_CU7xASXA-Iohe3U_tr4NfC8N-UliXiupYrukZHiQF-Vbwu8njW9Q&usqp=CAc'
     suggestions = suggest_articles(url, top_k=4)
-    # print("Suggested similar items:", suggestions)
     display_suggestions(suggestions)
