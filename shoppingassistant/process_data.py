@@ -8,7 +8,7 @@ from pathlib import Path
 
 from shoppingassistant.params import BASE_DIR
 from shoppingassistant.clustering import get_similar_items
-from shoppingassistant.helper_functions import get_image_path
+from shoppingassistant.helper_functions import get_image_path, get_article_id_from_path
 
 def filter_data(product_group_names=['Shoes']):
     '''
@@ -158,6 +158,17 @@ def get_most_popular_articles(article_id, n=10, transactions_df=None):
     revenue_with_article = most_sold_with_article.groupby('article_id').sum().reset_index()
     revenue_with_article = revenue_with_article.sort_values('price', ascending=False)
     return revenue_with_article['article_id'].head(n).map(int).tolist()
+
+def get_price(article_path, transactions_df=None):
+    article_id = get_article_id_from_path(article_path)
+    if transactions_df is None:
+        _, transactions_df = load_dataframes()
+    prices = transactions_df[transactions_df['article_id']==article_id]['price']
+    if prices.size > 0:
+        price = float(prices.iloc[-1])
+    else:
+        price = 0.03725424307201469
+    return round(price*2684.258, 2)
 
 
 if __name__ == "__main__":
