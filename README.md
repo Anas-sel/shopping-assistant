@@ -3,7 +3,7 @@
 =======
 ## Algorithm:
 ### General description:
-The algorithm takes an image path or a url as input, performs a double classification into
+The algorithm can be run from ```suggest_articles```. It takes an image path or a url as input, performs a double classification into
 subcategory and gender for the image. Then the model embeds the given image into an embedding space
 and search for the closest images in that space from the database (in distance). This would constitute a similar image.
 
