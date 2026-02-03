@@ -10,7 +10,7 @@ from shoppingassistant.suggestions import suggest_from_sales
 from tensorflow.keras.models import load_model
 from shoppingassistant.helper_functions import get_image, display_suggestions, get_prod_name, get_price
 import base64
-
+import timeit
 
 def load_model_class():
     """
@@ -44,14 +44,19 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     assert top_k <= 10, "top_k must be less than or equal to 10 to avoid long processing times"
     image_path = get_image(image_path)
 
+    start = timeit.default_timer()
     if subcategory is None:
         model_subcat_class = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
         subcategory = classify_subcategory(image_path, model_subcat_class)
+    stop = timeit.default_timer()
+    sub_classifier_run_time = stop - start
 
-
+    start = timeit.default_timer()
     if gender is None:
         model_gender_class = load_model(os.path.join(BASE_DIR, 'models', 'gender_classifier.keras'))
         gender = classify_gender(image_path, model_gender_class)
+    stop = timeit.default_timer()
+    gen_classifier_run_time = stop - start
 
     print(f"Predicted category: {subcategory}")
     print(f"Predicted gender: {gender}")
@@ -59,8 +64,10 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
 
     # Further processing to suggest similar items based on category_pred
     # Get n+1//2 similar items and the rest from sales data
+    start = timeit.default_timer()
     similar_articles = get_similar_items(image_path, subcategory=subcategory, gender=gender, n=(top_k+1)//2)
-
+    stop = timeit.default_timer()
+    clustering_run_time = stop - start
 
     similar_images = []
     for item in similar_articles:
@@ -73,6 +80,11 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     # Return image object instead of path using Image
     # put images in docker image or Drive if needed
     # return suggestions
+    print(f" -------------- ⏰⏰⏰⏰⏰⏰⏰⏰⏰ -------------- ")
+    print(f"⌛ The runtime of the Subcategory classification model is {sub_classifier_run_time} ⌛")
+    print(f"⌛ The runtime of the Gender classification model is {gen_classifier_run_time} ⌛")
+    print(f"⌛ The runtime of the similarity search model is {clustering_run_time} ⌛")
+    print(f" --------------⏰⏰⏰⏰⏰⏰⏰⏰⏰ -------------- ")
     return [
         {'name': get_prod_name(p),
          'data': base64.b64encode(Path(p).read_bytes()).decode(),
@@ -91,13 +103,9 @@ if __name__ == "__main__":
     from shoppingassistant.helper_functions import get_image_path, display_results
     from shoppingassistant.process_data import load_dataframes
 
-    articles_df, transactions_df = load_dataframes()
-    article_id = articles_df.iloc[10]['article_id']
-    image_path = get_image_path(article_id)
-    print(f"Image path for article ID {article_id}: {image_path}")
     image = BASE_DIR + "/raw_data/test_images/temp.jpg"
     # output = get_similar_items(image_path, n=5, subcategory='Sandals', gender='Menswear')
     # display_results(image, output)
     suggestions = suggest_articles(image, top_k=4)
-    print("Suggested similar items:", suggestions)
+    # print("Suggested similar items:", suggestions)
     display_suggestions(suggestions)
