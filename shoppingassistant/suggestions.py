@@ -3,7 +3,7 @@ from shoppingassistant.helper_functions import get_article_id_from_path, get_ima
 from shoppingassistant.process_data import get_most_popular_articles
 import os
 
-def suggest_from_sales(closest_matchs):
+def suggest_from_sales(closest_matchs, transacions_df=None):
     """
     Suggest items based on recent sales data. Would give one suggestion per closest match.
     Args:
@@ -20,7 +20,7 @@ def suggest_from_sales(closest_matchs):
 
     for item in closest_matchs:
         article_id = get_article_id_from_path(item)
-        best_sales = get_most_popular_articles(article_id)
+        best_sales = get_most_popular_articles(article_id, transactions_df=transacions_df)
         if best_sales[0] not in suggestions:
             suggestions.append(best_sales[0])
         else:

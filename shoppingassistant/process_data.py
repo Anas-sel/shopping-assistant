@@ -80,7 +80,7 @@ def load_dataframes(keep_colors=False):
     articles_df = pd.read_csv(path_to_data / "articles_filtered.csv")
 
     # Additional preprocessing steps can be added here
-    transactions_df = transactions_df[['t_dat', 'article_id', 'price', 'customer_id']]
+    transactions_df = transactions_df[['t_dat', 'article_id', 'price', 'customer_id', 'sales_channel_id']]
     transactions_df['t_dat']= pd.to_datetime(transactions_df['t_dat'])
 
     # Drop color-related columns if keep_colors is False
@@ -94,7 +94,7 @@ def load_dataframes(keep_colors=False):
 
     # Only select relevant columns
     relevant_columns = ['article_id','product_code', 'product_type_name', 'product_group_name',
-                        'index_group_name']
+                        'index_group_name', 'prod_name']
     if keep_colors:
         relevant_columns += ['perceived_colour_master_name']
 
@@ -123,23 +123,24 @@ def sort_by_revenue(article_ids):
 
     return sorted_ids
 
-def get_most_popular_articles(article_id, n=10):
+def get_most_popular_articles(article_id, n=10, transactions_df=None):
     """
     Returns a list of the n most popular article_ids based on total revenue
     and the given article_id, i.e. which are the most revenue-generating articles
     that were bought together with the given article_id at the same day.
     """
     # Load filtered transactions
-    _, df_trans = load_dataframes()
+    if transactions_df is None:
+        _, transactions_df = load_dataframes()
 
     # Get customer_ids who bought the given article_id
-    customers = df_trans[df_trans["article_id"] == article_id]["customer_id"].unique()
+    customers = transactions_df[transactions_df["article_id"] == article_id]["customer_id"].unique()
 
 
     most_sold_with_article = pd.DataFrame(columns=['article_id', 'price'])
 
     for cust in customers:
-        df_cust = df_trans[df_trans['customer_id']==cust] # Transactions of that customer
+        df_cust = transactions_df[transactions_df['customer_id']==cust] # Transactions of that customer
         sell_date = df_cust[df_cust['article_id']==article_id]['t_dat'].values[0] # Date when the article was bought
         articles_bought_same_day = df_cust[df_cust['t_dat']==sell_date]
         articles_bought_same_day = articles_bought_same_day[articles_bought_same_day!=article_id]

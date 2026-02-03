@@ -7,6 +7,7 @@ from shoppingassistant.params import *
 from shoppingassistant.classification import classify_subcategory, classify_gender
 from shoppingassistant.clustering import get_similar_items
 from shoppingassistant.suggestions import suggest_from_sales
+from shoppingassistant.process_data import load_dataframes
 from tensorflow.keras.models import load_model
 from shoppingassistant.helper_functions import get_image, display_suggestions, get_prod_name, get_price
 import base64
@@ -27,7 +28,7 @@ def save_model(model):
     pass
 
 
-def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
+def suggest_articles(image_path, top_k=5, subcategory=None, gender=None, model_sub=None, model_gen=None):
     """
     Suggest similar items based on the input image using the provided model.
 
@@ -43,15 +44,18 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     assert top_k > 0, "top_k must be a positive integer"
     assert top_k <= 10, "top_k must be less than or equal to 10 to avoid long processing times"
     image_path = get_image(image_path)
+    articles_df, transactions_df = load_dataframes()
 
     if subcategory is None:
-        model_subcat_class = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
-        subcategory = classify_subcategory(image_path, model_subcat_class)
+        if model_sub is None:
+            model_sub = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
+        subcategory = classify_subcategory(image_path, model=model_sub, articles_df=articles_df)
 
 
     if gender is None:
-        model_gender_class = load_model(os.path.join(BASE_DIR, 'models', 'gender_classifier.keras'))
-        gender = classify_gender(image_path, model_gender_class)
+        if model_gen is None:
+            model_gen = load_model(os.path.join(BASE_DIR, 'models', 'gender_classifier.keras'))
+        gender = classify_gender(image_path, model_gen)
 
     print(f"Predicted category: {subcategory}")
     print(f"Predicted gender: {gender}")
@@ -66,7 +70,7 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     for item in similar_articles:
         similar_images.append(item['image_path']) # or article_id
 
-    sales_suggestions = suggest_from_sales(similar_images)
+    sales_suggestions = suggest_from_sales(similar_images, transacions_df=transactions_df)
     # if len(sales_suggestions) < (top_k - len(similar_images)):  # in case not enough sales suggestions fill out with similar articles
     suggestions = similar_images + sales_suggestions
     suggestions = suggestions[:top_k]
@@ -74,12 +78,12 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     # put images in docker image or Drive if needed
     # return suggestions
     return [
-        {'name': get_prod_name(p),
+        {'name': get_prod_name(p, articles_df=articles_df),
          'data': base64.b64encode(Path(p).read_bytes()).decode(),
          'description': f"Similar item #{i+1}" if i<len(similar_images) else f"Sales based suggestion #{i+1 - len(similar_images)}",
          'subcategory': f"Subcategory: {subcategory}",
          'gender': f"Gender: {gender}",
-         'price': get_price(p),
+         'price': get_price(p, transactions_df=transactions_df),
          'path': p
          }
         for i, p in enumerate(suggestions)
@@ -91,13 +95,11 @@ if __name__ == "__main__":
     from shoppingassistant.helper_functions import get_image_path, display_results
     from shoppingassistant.process_data import load_dataframes
 
-    articles_df, transactions_df = load_dataframes()
-    article_id = articles_df.iloc[10]['article_id']
-    image_path = get_image_path(article_id)
-    print(f"Image path for article ID {article_id}: {image_path}")
+
     image = BASE_DIR + "/raw_data/test_images/temp.jpg"
-    # output = get_similar_items(image_path, n=5, subcategory='Sandals', gender='Menswear')
-    # display_results(image, output)
-    suggestions = suggest_articles(image, top_k=4)
-    print("Suggested similar items:", suggestions)
+
+    url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcR9gf6qxciZPFtmy7il5ZnaMenaohfEmfK2FQ_ieT-QbzJrw0X3AA1GqoSHU914_Rt_CU7xASXA-Iohe3U_tr4NfC8N-UliXiupYrukZHiQF-Vbwu8njW9Q&usqp=CAc'
+    url = 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRbVSH29symEB856MgsktvF2Awj8tKjB6JU2rqdIki9cM2H8dt_5ygqhRa_p2YDf9Awv9K6vWs69iSkY72z0kjKvY8HoKKekfzgtAk_B0-h_8QW_u3Q6vfKzxZ9ju01hFHwxzvzw7HsVg&usqp=CAc'
+    suggestions = suggest_articles(url, top_k=4)
+    # print("Suggested similar items:", suggestions)
     display_suggestions(suggestions)
