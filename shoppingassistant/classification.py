@@ -1,5 +1,7 @@
 from tensorflow.keras.utils import to_categorical
 from shoppingassistant.helper_functions import preprocess_single_image, load_images_and_labels
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from tensorflow.keras.applications.efficientnet import preprocess_input
 from shoppingassistant.params import *
 import numpy as np
 import requests
@@ -17,8 +19,13 @@ def classify_subcategory(image_path, model=None, articles_df=None):
 
     This function should load the model if not provided and perform the classification.
     """
-    _, _, categories = load_images_and_labels(target_column='product_type_name', num_images=1, articles_df=articles_df)
-    img_array = preprocess_single_image(image_path)
+
+    categories = ['Boots', 'Flat shoe', 'Heels', 'Sandals', 'Slippers', 'Sneakers']
+
+    img = load_img(image_path, target_size=(224, 224))
+    img_array = img_to_array(img)
+    img_array = preprocess_input(img_array)
+    img_array = np.expand_dims(img_array, axis=0)
 
     predictions = model.predict(img_array, verbose=0)
     predicted_idx = np.argmax(predictions[0])
