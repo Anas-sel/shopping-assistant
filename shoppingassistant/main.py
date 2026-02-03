@@ -11,7 +11,7 @@ from shoppingassistant.process_data import load_dataframes
 from tensorflow.keras.models import load_model
 from shoppingassistant.helper_functions import get_image, display_suggestions, get_prod_name, get_price
 import base64
-
+import timeit
 
 def load_model_class():
     """
@@ -46,12 +46,13 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None, model_s
     image_path = get_image(image_path)
     articles_df, transactions_df = load_dataframes()
 
+    start = timeit.default_timer()
     if subcategory is None:
         if model_sub is None:
             model_sub = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
         subcategory = classify_subcategory(image_path, model=model_sub, articles_df=articles_df)
 
-
+    start = timeit.default_timer()
     if gender is None:
         if model_gen is None:
             model_gen = load_model(os.path.join(BASE_DIR, 'models', 'gender_classifier.keras'))
@@ -63,8 +64,10 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None, model_s
 
     # Further processing to suggest similar items based on category_pred
     # Get n+1//2 similar items and the rest from sales data
+    start = timeit.default_timer()
     similar_articles = get_similar_items(image_path, subcategory=subcategory, gender=gender, n=(top_k+1)//2)
-
+    stop = timeit.default_timer()
+    clustering_run_time = stop - start
 
     similar_images = []
     for item in similar_articles:
@@ -77,6 +80,11 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None, model_s
     # Return image object instead of path using Image
     # put images in docker image or Drive if needed
     # return suggestions
+    print(f" -------------- ⏰⏰⏰⏰⏰⏰⏰⏰⏰ -------------- ")
+    print(f"⌛ The runtime of the Subcategory classification model is {sub_classifier_run_time} ⌛")
+    print(f"⌛ The runtime of the Gender classification model is {gen_classifier_run_time} ⌛")
+    print(f"⌛ The runtime of the similarity search model is {clustering_run_time} ⌛")
+    print(f" -------------- ⏰⏰⏰⏰⏰⏰⏰⏰⏰ -------------- ")
     return [
         {'name': get_prod_name(p, articles_df=articles_df),
          'data': base64.b64encode(Path(p).read_bytes()).decode(),
@@ -95,11 +103,12 @@ if __name__ == "__main__":
     from shoppingassistant.helper_functions import get_image_path, display_results
     from shoppingassistant.process_data import load_dataframes
 
-
     image = BASE_DIR + "/raw_data/test_images/temp.jpg"
 
-    url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcR9gf6qxciZPFtmy7il5ZnaMenaohfEmfK2FQ_ieT-QbzJrw0X3AA1GqoSHU914_Rt_CU7xASXA-Iohe3U_tr4NfC8N-UliXiupYrukZHiQF-Vbwu8njW9Q&usqp=CAc'
-    url = 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRbVSH29symEB856MgsktvF2Awj8tKjB6JU2rqdIki9cM2H8dt_5ygqhRa_p2YDf9Awv9K6vWs69iSkY72z0kjKvY8HoKKekfzgtAk_B0-h_8QW_u3Q6vfKzxZ9ju01hFHwxzvzw7HsVg&usqp=CAc'
+
+    # Some urls for testing the function
+    url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcS9e8LgfdduH__eVABV2kFceX-nAnhQXsFuwKMClMNwS11B6aKB6QSsKWEQfl3Q3HjH3z3YGVbRN7j9ellAW4qiokIcxLwdtRhoKO0YFffMbop9GmxTRFMEbAHa3ghUoMU79CsfavVjLA&usqp=CAc'
+    # url = 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRbVSH29symEB856MgsktvF2Awj8tKjB6JU2rqdIki9cM2H8dt_5ygqhRa_p2YDf9Awv9K6vWs69iSkY72z0kjKvY8HoKKekfzgtAk_B0-h_8QW_u3Q6vfKzxZ9ju01hFHwxzvzw7HsVg&usqp=CAc'
+    # url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcR9gf6qxciZPFtmy7il5ZnaMenaohfEmfK2FQ_ieT-QbzJrw0X3AA1GqoSHU914_Rt_CU7xASXA-Iohe3U_tr4NfC8N-UliXiupYrukZHiQF-Vbwu8njW9Q&usqp=CAc'
     suggestions = suggest_articles(url, top_k=4)
-    # print("Suggested similar items:", suggestions)
     display_suggestions(suggestions)

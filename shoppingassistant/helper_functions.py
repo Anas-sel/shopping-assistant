@@ -223,15 +223,19 @@ def display_suggestions(suggestions):
     from PIL import Image as PILImage
 
     n_results = len(suggestions)
-    fig, axes = plt.subplots(1, n_results, figsize=(4 * n_results, 5))
-
+    fig, axes = plt.subplots(2, n_results//2, figsize=(2 * n_results, 5))
+    j = 0
+    k = 0
     # Display suggested images
     for i, suggestion in enumerate(suggestions):
         img = PILImage.open(suggestion['path'])
-
-        axes[i].imshow(img)
-        axes[i].axis('off')
-        axes[i].set_title(suggestion['description'], fontsize=12, fontweight='bold', color='green')
+        if i == n_results//2:
+            j = 1
+            k = 0
+        axes[j,k].imshow(img)
+        axes[j,k].axis('off')
+        axes[j,k].set_title(suggestion['description'], fontsize=12, fontweight='bold', color='green')
+        k += 1
 
     plt.tight_layout()
     plt.show()

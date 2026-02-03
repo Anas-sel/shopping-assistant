@@ -1,6 +1,19 @@
 # Your Personal Shopping Assistant
 
 =======
+## Algorithm:
+### General description:
+The algorithm can be run from ```suggest_articles```. It takes an image path or a url as input, performs a double classification into
+subcategory and gender for the image. Then the model embeds the given image into an embedding space
+and search for the closest images in that space from the database (in distance). This would constitute a similar image.
+
+To give suggestions, we follow two rules:
+- Half the requested suggestions would be from similarity search.
+- For the other half, each suggestion corresponds to the item most sold with each of the results from the similarity search.
+
+P.S: In case the item determined from similarity search has no sales history on its own, has no other items it is usually
+sold with, perform another similarity search on it, and give back the item with the most revenue from this new list.
+
 ## Classification for subcategory:
 Please run meerim_test_classifier and check last section how to load the model
 
