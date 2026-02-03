@@ -6,7 +6,6 @@ import pandas as pd
 from PIL import Image
 from sklearn.model_selection import train_test_split
 from shoppingassistant.params import *
-from shoppingassistant.process_data import load_dataframes
 
 def get_image_path(article_id: str) -> str:
     '''
@@ -256,11 +255,3 @@ def get_prod_name(image_path, articles_df=None):
         return prod_name[0]
     else:
         return "Unknown Product"
-
-def get_price(article_path, transactions_df=None):
-    article_id = get_article_id_from_path(article_path)
-    if transactions_df is None:
-        _, transactions_df = load_dataframes()
-
-    price = float(transactions_df[transactions_df['article_id']==article_id]['price'].iloc[-1])
-    return round(price*2684.258, 2)

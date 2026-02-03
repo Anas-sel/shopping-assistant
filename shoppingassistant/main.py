@@ -7,9 +7,9 @@ from shoppingassistant.params import *
 from shoppingassistant.classification import classify_subcategory, classify_gender
 from shoppingassistant.clustering import get_similar_items
 from shoppingassistant.suggestions import suggest_from_sales
-from shoppingassistant.process_data import load_dataframes
+from shoppingassistant.process_data import load_dataframes, get_price
 from tensorflow.keras.models import load_model
-from shoppingassistant.helper_functions import get_image, display_suggestions, get_prod_name, get_price
+from shoppingassistant.helper_functions import get_image, display_suggestions, get_prod_name
 import base64
 import timeit
 
@@ -51,13 +51,16 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None, model_s
         if model_sub is None:
             model_sub = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
         subcategory = classify_subcategory(image_path, model=model_sub, articles_df=articles_df)
+    stop = timeit.default_timer()
+    sub_classifier_run_time = stop - start
 
     start = timeit.default_timer()
     if gender is None:
         if model_gen is None:
             model_gen = load_model(os.path.join(BASE_DIR, 'models', 'gender_classifier.keras'))
         gender = classify_gender(image_path, model_gen)
-
+    stop = timeit.default_timer()
+    gen_classifier_run_time = stop - start
     print(f"Predicted category: {subcategory}")
     print(f"Predicted gender: {gender}")
 
@@ -107,8 +110,8 @@ if __name__ == "__main__":
 
 
     # Some urls for testing the function
-    url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcS9e8LgfdduH__eVABV2kFceX-nAnhQXsFuwKMClMNwS11B6aKB6QSsKWEQfl3Q3HjH3z3YGVbRN7j9ellAW4qiokIcxLwdtRhoKO0YFffMbop9GmxTRFMEbAHa3ghUoMU79CsfavVjLA&usqp=CAc'
-    # url = 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRbVSH29symEB856MgsktvF2Awj8tKjB6JU2rqdIki9cM2H8dt_5ygqhRa_p2YDf9Awv9K6vWs69iSkY72z0kjKvY8HoKKekfzgtAk_B0-h_8QW_u3Q6vfKzxZ9ju01hFHwxzvzw7HsVg&usqp=CAc'
+    # url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcS9e8LgfdduH__eVABV2kFceX-nAnhQXsFuwKMClMNwS11B6aKB6QSsKWEQfl3Q3HjH3z3YGVbRN7j9ellAW4qiokIcxLwdtRhoKO0YFffMbop9GmxTRFMEbAHa3ghUoMU79CsfavVjLA&usqp=CAc'
+    url = 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRbVSH29symEB856MgsktvF2Awj8tKjB6JU2rqdIki9cM2H8dt_5ygqhRa_p2YDf9Awv9K6vWs69iSkY72z0kjKvY8HoKKekfzgtAk_B0-h_8QW_u3Q6vfKzxZ9ju01hFHwxzvzw7HsVg&usqp=CAc'
     # url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcR9gf6qxciZPFtmy7il5ZnaMenaohfEmfK2FQ_ieT-QbzJrw0X3AA1GqoSHU914_Rt_CU7xASXA-Iohe3U_tr4NfC8N-UliXiupYrukZHiQF-Vbwu8njW9Q&usqp=CAc'
     suggestions = suggest_articles(url, top_k=4)
     display_suggestions(suggestions)
