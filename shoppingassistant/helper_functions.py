@@ -6,6 +6,7 @@ import pandas as pd
 from PIL import Image
 from sklearn.model_selection import train_test_split
 from shoppingassistant.params import *
+from shoppingassistant.process_data import load_dataframes
 
 def get_image_path(article_id: str) -> str:
     '''
@@ -36,20 +37,12 @@ def get_image_paths(article_ids):
             paths.append(None)
     return paths
 
-# def get_category_labels_from_strs(categories):
-#     '''
-#     Docstring for get_category_mappings
-#     Returns a dictionary mapping product_type_name to index_group_name
-#     '''
-#     subcategories =['Boots', 'Sneakers', 'Other shoe', 'Sandals', 'Slippers',
-#        'Ballerinas', 'Flat shoe', 'Wedge', 'Pumps', 'Flip flop', 'Bootie',
-#        'Heeled sandals', 'Flat shoes', 'Heels', 'Moccasins',
-#        'Pre-walkers']
-#     subcategories_mapping = { i:subcategories[i] for i in range (len(subcategories))}
-
-# def get_category_strs_from_labels():
-
-#     pass
+def get_article_id_from_path(image_path: str) -> int:
+    '''
+    Given an image path, return the article_id
+    '''
+    filename = os.path.basename(image_path)
+    return int(filename.split('.')[0][1:])
 
 def display_results(query_image_path, results):
     '''
@@ -95,7 +88,7 @@ def display_results(query_image_path, results):
         print(f"   Color: {item['colour_group_name']}")
         print(f"   Gender: {item['index_group_name']}")
 
-def load_images_and_labels(target_column='product_type_name', num_images=None):
+def load_images_and_labels(target_column='product_type_name', num_images=None, articles_df=None):
     """
     Load images and labels for classification.
     Works for both subcategory and gender classification
@@ -105,9 +98,10 @@ def load_images_and_labels(target_column='product_type_name', num_images=None):
         y (numpy array): Labels (NOT one-hot encoded yet)
         categories (list): List of unique category names
     """
-
-    df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
-
+    if articles_df is None:
+        df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
+    else:
+        df = articles_df
     # Remove Sport and Divided category for Gender classification
     if target_column == 'index_group_name':
         classes_to_remove = ['Sport',  'Divided']
@@ -218,3 +212,55 @@ def get_image(image_path):
         with open(os.path.join(BASE_DIR, 'raw_data', 'test_images', 'temp.jpg'), 'wb') as f:
             f.write(image_url)
         return os.path.join(BASE_DIR, 'raw_data', 'test_images', 'temp.jpg')
+
+def display_suggestions(suggestions):
+    '''
+    Function to display image suggestions from suggest_articles function in a grid format
+    '''
+
+    import matplotlib.pyplot as plt
+
+    from PIL import Image as PILImage
+
+    n_results = len(suggestions)
+    fig, axes = plt.subplots(2, n_results//2, figsize=(2 * n_results, 5))
+    j = 0
+    k = 0
+    # Display suggested images
+    for i, suggestion in enumerate(suggestions):
+        img = PILImage.open(suggestion['path'])
+        if i == n_results//2:
+            j = 1
+            k = 0
+        axes[j,k].imshow(img)
+        axes[j,k].axis('off')
+        axes[j,k].set_title(suggestion['description'], fontsize=12, fontweight='bold', color='green')
+        k += 1
+
+    plt.tight_layout()
+    plt.show()
+
+
+def get_prod_name(image_path, articles_df=None):
+    '''
+    Given an image path, return the product name from articles_filtered.csv
+    '''
+    import pandas as pd
+    if articles_df is None:
+        df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
+    else:
+        df = articles_df
+    article_id = get_article_id_from_path(image_path)
+    prod_name = df[df['article_id'] == article_id]['prod_name'].values
+    if len(prod_name) > 0:
+        return prod_name[0]
+    else:
+        return "Unknown Product"
+
+def get_price(article_path, transactions_df=None):
+    article_id = get_article_id_from_path(article_path)
+    if transactions_df is None:
+        _, transactions_df = load_dataframes()
+
+    price = float(transactions_df[transactions_df['article_id']==article_id]['price'].iloc[-1])
+    return round(price*2684.258, 2)
