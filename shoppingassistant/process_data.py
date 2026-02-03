@@ -7,6 +7,8 @@ import shutil
 from pathlib import Path
 
 from shoppingassistant.params import BASE_DIR
+from shoppingassistant.clustering import get_similar_items
+from shoppingassistant.helper_functions import get_image_path
 
 def filter_data(product_group_names=['Shoes']):
     '''
@@ -134,6 +136,11 @@ def get_most_popular_articles(article_id, n=10):
 
     # Get customer_ids who bought the given article_id
     customers = df_trans[df_trans["article_id"] == article_id]["customer_id"].unique()
+    if customers.size == 0:
+        items = get_similar_items(get_image_path(article_id))
+        ids= [p['article_id'] for p in items]
+        sorted_by_revenue = sort_by_revenue(ids)
+        return sorted_by_revenue[:n]
 
 
     most_sold_with_article = pd.DataFrame(columns=['article_id', 'price'])
