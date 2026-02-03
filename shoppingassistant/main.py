@@ -7,6 +7,7 @@ from shoppingassistant.params import *
 from shoppingassistant.classification import classify_subcategory, classify_gender
 from shoppingassistant.clustering import get_similar_items
 from shoppingassistant.suggestions import suggest_from_sales
+from shoppingassistant.process_data import load_dataframes
 from tensorflow.keras.models import load_model
 from shoppingassistant.helper_functions import get_image, display_suggestions, get_prod_name, get_price
 import base64
@@ -27,7 +28,7 @@ def save_model(model):
     pass
 
 
-def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
+def suggest_articles(image_path, top_k=5, subcategory=None, gender=None, model_sub=None, model_gen=None):
     """
     Suggest similar items based on the input image using the provided model.
 
@@ -43,20 +44,19 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     assert top_k > 0, "top_k must be a positive integer"
     assert top_k <= 10, "top_k must be less than or equal to 10 to avoid long processing times"
     image_path = get_image(image_path)
+    articles_df, transactions_df = load_dataframes()
 
     start = timeit.default_timer()
     if subcategory is None:
-        model_subcat_class = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
-        subcategory = classify_subcategory(image_path, model_subcat_class)
-    stop = timeit.default_timer()
-    sub_classifier_run_time = stop - start
+        if model_sub is None:
+            model_sub = load_model(os.path.join(BASE_DIR, 'models', 'subcategory_classifier_best.keras'))
+        subcategory = classify_subcategory(image_path, model=model_sub, articles_df=articles_df)
 
     start = timeit.default_timer()
     if gender is None:
-        model_gender_class = load_model(os.path.join(BASE_DIR, 'models', 'gender_classifier.keras'))
-        gender = classify_gender(image_path, model_gender_class)
-    stop = timeit.default_timer()
-    gen_classifier_run_time = stop - start
+        if model_gen is None:
+            model_gen = load_model(os.path.join(BASE_DIR, 'models', 'gender_classifier.keras'))
+        gender = classify_gender(image_path, model_gen)
 
     print(f"Predicted category: {subcategory}")
     print(f"Predicted gender: {gender}")
@@ -73,7 +73,7 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     for item in similar_articles:
         similar_images.append(item['image_path']) # or article_id
 
-    sales_suggestions = suggest_from_sales(similar_images)
+    sales_suggestions = suggest_from_sales(similar_images, transacions_df=transactions_df)
     # if len(sales_suggestions) < (top_k - len(similar_images)):  # in case not enough sales suggestions fill out with similar articles
     suggestions = similar_images + sales_suggestions
     suggestions = suggestions[:top_k]
@@ -86,12 +86,12 @@ def suggest_articles(image_path, top_k=5, subcategory=None, gender=None):
     print(f"⌛ The runtime of the similarity search model is {clustering_run_time} ⌛")
     print(f" -------------- ⏰⏰⏰⏰⏰⏰⏰⏰⏰ -------------- ")
     return [
-        {'name': get_prod_name(p),
+        {'name': get_prod_name(p, articles_df=articles_df),
          'data': base64.b64encode(Path(p).read_bytes()).decode(),
          'description': f"Similar item #{i+1}" if i<len(similar_images) else f"Sales based suggestion #{i+1 - len(similar_images)}",
          'subcategory': f"Subcategory: {subcategory}",
          'gender': f"Gender: {gender}",
-         'price': get_price(p),
+         'price': get_price(p, transactions_df=transactions_df),
          'path': p
          }
         for i, p in enumerate(suggestions)

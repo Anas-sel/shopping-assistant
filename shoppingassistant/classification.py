@@ -6,10 +6,10 @@ import requests
 import numpy as np
 from PIL import Image
 from io import BytesIO
-from tensorflow.keras.models import load_model
+# from tensorflow.keras.models import load_model
 
 
-def classify_subcategory(image_path, model=None):
+def classify_subcategory(image_path, model=None, articles_df=None):
     """
     Classifies the subcategory of the item in the image located at image_path
     using the provided model according to the column product_type_name from articles.csv
@@ -17,7 +17,7 @@ def classify_subcategory(image_path, model=None):
 
     This function should load the model if not provided and perform the classification.
     """
-    _, _, categories = load_images_and_labels(target_column='product_type_name', num_images=1)
+    _, _, categories = load_images_and_labels(target_column='product_type_name', num_images=1, articles_df=articles_df)
     img_array = preprocess_single_image(image_path)
 
     predictions = model.predict(img_array, verbose=0)

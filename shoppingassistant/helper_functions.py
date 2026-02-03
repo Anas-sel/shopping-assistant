@@ -6,6 +6,7 @@ import pandas as pd
 from PIL import Image
 from sklearn.model_selection import train_test_split
 from shoppingassistant.params import *
+from shoppingassistant.process_data import load_dataframes
 
 def get_image_path(article_id: str) -> str:
     '''
@@ -87,7 +88,7 @@ def display_results(query_image_path, results):
         print(f"   Color: {item['colour_group_name']}")
         print(f"   Gender: {item['index_group_name']}")
 
-def load_images_and_labels(target_column='product_type_name', num_images=None):
+def load_images_and_labels(target_column='product_type_name', num_images=None, articles_df=None):
     """
     Load images and labels for classification.
     Works for both subcategory and gender classification
@@ -97,9 +98,10 @@ def load_images_and_labels(target_column='product_type_name', num_images=None):
         y (numpy array): Labels (NOT one-hot encoded yet)
         categories (list): List of unique category names
     """
-
-    df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
-
+    if articles_df is None:
+        df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
+    else:
+        df = articles_df
     # Remove Sport and Divided category for Gender classification
     if target_column == 'index_group_name':
         classes_to_remove = ['Sport',  'Divided']
@@ -239,12 +241,15 @@ def display_suggestions(suggestions):
     plt.show()
 
 
-def get_prod_name(image_path):
+def get_prod_name(image_path, articles_df=None):
     '''
     Given an image path, return the product name from articles_filtered.csv
     '''
     import pandas as pd
-    df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
+    if articles_df is None:
+        df = pd.read_csv(BASE_DIR + "/raw_data/articles_filtered.csv")
+    else:
+        df = articles_df
     article_id = get_article_id_from_path(image_path)
     prod_name = df[df['article_id'] == article_id]['prod_name'].values
     if len(prod_name) > 0:
@@ -252,5 +257,10 @@ def get_prod_name(image_path):
     else:
         return "Unknown Product"
 
-def get_price(article_path):
-    return 0.23
+def get_price(article_path, transactions_df=None):
+    article_id = get_article_id_from_path(article_path)
+    if transactions_df is None:
+        _, transactions_df = load_dataframes()
+
+    price = float(transactions_df[transactions_df['article_id']==article_id]['price'].iloc[-1])
+    return round(price*2684.258, 2)
