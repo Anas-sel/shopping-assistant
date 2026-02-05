@@ -106,12 +106,12 @@ if __name__ == "__main__":
     from shoppingassistant.helper_functions import get_image_path, display_results
     from shoppingassistant.process_data import load_dataframes
 
-    image = BASE_DIR + "/raw_data/test_images/temp.jpg"
+    image = BASE_DIR + "/raw_data/test_images/temp2.jpg"
 
 
     # Some urls for testing the function
     # url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcS9e8LgfdduH__eVABV2kFceX-nAnhQXsFuwKMClMNwS11B6aKB6QSsKWEQfl3Q3HjH3z3YGVbRN7j9ellAW4qiokIcxLwdtRhoKO0YFffMbop9GmxTRFMEbAHa3ghUoMU79CsfavVjLA&usqp=CAc'
     url = 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRbVSH29symEB856MgsktvF2Awj8tKjB6JU2rqdIki9cM2H8dt_5ygqhRa_p2YDf9Awv9K6vWs69iSkY72z0kjKvY8HoKKekfzgtAk_B0-h_8QW_u3Q6vfKzxZ9ju01hFHwxzvzw7HsVg&usqp=CAc'
     # url = 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcR9gf6qxciZPFtmy7il5ZnaMenaohfEmfK2FQ_ieT-QbzJrw0X3AA1GqoSHU914_Rt_CU7xASXA-Iohe3U_tr4NfC8N-UliXiupYrukZHiQF-Vbwu8njW9Q&usqp=CAc'
-    suggestions = suggest_articles(url, top_k=4)
+    suggestions = suggest_articles(image, top_k=4, gender="Menswear")
     display_suggestions(suggestions)

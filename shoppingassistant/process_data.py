@@ -138,12 +138,15 @@ def get_most_popular_articles(article_id, n=10, transactions_df=None):
     # Get customer_ids who bought the given article_id
     customers = transactions_df[transactions_df["article_id"] == article_id]["customer_id"].unique()
 
-    if customers.size == 0:
+    def fallback_case(article_id, n):
+        # Function for fallback case in case article doesnt have items sold with it
         items = get_similar_items(get_image_path(article_id))
         ids= [p['article_id'] for p in items]
         sorted_by_revenue = sort_by_revenue(ids)
         return sorted_by_revenue[:n]
 
+    if customers.size == 0:
+        return fallback_case(article_id, n)
 
     most_sold_with_article = pd.DataFrame(columns=['article_id', 'price'])
 
@@ -157,6 +160,8 @@ def get_most_popular_articles(article_id, n=10, transactions_df=None):
         most_sold_with_article = pd.concat([most_sold_with_article, articles_bought_same_day[['article_id', 'price']].head(1)], ignore_index=True)
     revenue_with_article = most_sold_with_article.groupby('article_id').sum().reset_index()
     revenue_with_article = revenue_with_article.sort_values('price', ascending=False)
+    if most_sold_with_article.size == 0:
+        return fallback_case(article_id, n)
     return revenue_with_article['article_id'].head(n).map(int).tolist()
 
 def get_price(article_path, transactions_df=None):
